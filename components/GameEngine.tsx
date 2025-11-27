@@ -1,15 +1,17 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useGameStore, LevelId } from '@/lib/store';
+import { useGameStore, ChapterId, CHAPTER_INFO } from '@/lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import Prologue from './levels/Prologue';
-import Level1Basics from './levels/Level1Basics';
-import Level2Trends from './levels/Level2Trends';
-import Level3Ecosystem from './levels/Level3Ecosystem';
-import Level4PickPeak from './levels/Level4PickPeak';
-import Level5Negotiation from './levels/Level5Negotiation';
+import Chapter1Migration from './chapters/Chapter1Migration';
+import Chapter2Moat from './chapters/Chapter2Moat';
+import Chapter3GroundForce from './chapters/Chapter3GroundForce';
+import Chapter4PickPeak from './chapters/Chapter4PickPeak';
+import Chapter5Ecosystem from './chapters/Chapter5Ecosystem';
+import Chapter6Negotiation from './chapters/Chapter6Negotiation';
+import Epilogue from './chapters/Epilogue';
 import Character from './rpg/Character';
 import LevelBriefing from './rpg/LevelBriefing';
 import Hub from './rpg/Hub';
@@ -20,34 +22,52 @@ import Certificate from './Certificate';
 import StarfieldBackground from './fx/StarfieldBackground';
 
 export default function GameEngine() {
-    const { currentLevelId, employeeId, level, xp, hp, maxHp, resetHp, avatar, completedLevels, companionUnlocked, view, setView } = useGameStore();
+    const {
+        currentChapterId,
+        employeeId,
+        xp,
+        hp,
+        maxHp,
+        resetHp,
+        avatar,
+        completedChapters,
+        badges,
+        view,
+        setView,
+        marketInsights,
+        companyInsights,
+        productInsights
+    } = useGameStore();
+
+    // Bit is unlocked after completing prologue (First Steps badge)
+    const hasBit = badges.includes('First Steps') || completedChapters.length > 0;
+
     const [mounted, setMounted] = useState(false);
     const [showBriefing, setShowBriefing] = useState(false);
-    const [showLevelComplete, setShowLevelComplete] = useState(false);
+    const [showChapterComplete, setShowChapterComplete] = useState(false);
     const [showGameClear, setShowGameClear] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [showGameOver, setShowGameOver] = useState(false);
-    const prevCompletedLevelsRef = useRef(completedLevels.length);
+    const prevCompletedChaptersRef = useRef(completedChapters.length);
 
-    const totalLevels = 5; // Basics, Trends, Ecosystem, PickPeak, Negotiation
-    const progress = Math.min(100, (completedLevels.length / totalLevels) * 100);
+    const totalChapters = 7; // 6 chapters + epilogue
+    const progress = Math.min(100, (completedChapters.length / totalChapters) * 100);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Handle Level Completion Detection
+    // Handle Chapter Completion Detection
     useEffect(() => {
-        if (completedLevels.length > prevCompletedLevelsRef.current) {
-            // Level just completed
-            setShowLevelComplete(true);
+        if (completedChapters.length > prevCompletedChaptersRef.current) {
+            setShowChapterComplete(true);
         }
-        prevCompletedLevelsRef.current = completedLevels.length;
-    }, [completedLevels]);
+        prevCompletedChaptersRef.current = completedChapters.length;
+    }, [completedChapters]);
 
     // Handle View Changes & Transitions
     useEffect(() => {
-        if (view === 'level' && currentLevelId !== 'prologue') {
+        if (view === 'chapter' && currentChapterId !== 'prologue') {
             setIsTransitioning(true);
             setTimeout(() => {
                 setIsTransitioning(false);
@@ -57,7 +77,7 @@ export default function GameEngine() {
             setIsTransitioning(true);
             setTimeout(() => setIsTransitioning(false), 1000);
         }
-    }, [view, currentLevelId]);
+    }, [view, currentChapterId]);
 
     // Handle Game Over
     useEffect(() => {
@@ -66,11 +86,11 @@ export default function GameEngine() {
         }
     }, [hp]);
 
-    const handleLevelCompleteClose = () => {
-        setShowLevelComplete(false);
+    const handleChapterCompleteClose = () => {
+        setShowChapterComplete(false);
 
-        // Check for Game Clear (All 5 levels done)
-        if (completedLevels.length >= 5) {
+        // Check for Game Clear (All chapters done including epilogue)
+        if (completedChapters.length >= totalChapters) {
             setShowGameClear(true);
         } else {
             setView('hub');
@@ -85,7 +105,6 @@ export default function GameEngine() {
     const handleRetry = () => {
         resetHp();
         setShowGameOver(false);
-        // Ideally reset level state too, but for now just heal
     };
 
     if (!mounted) return null;
@@ -95,21 +114,25 @@ export default function GameEngine() {
             return <Hub />;
         }
 
-        switch (currentLevelId) {
+        if (view === 'certificate') {
+            return <Certificate />;
+        }
+
+        // Render the appropriate chapter
+        switch (currentChapterId) {
             case 'prologue': return <Prologue />;
-            case 'basics': return <Level1Basics />;
-            case 'trends': return <Level2Trends />;
-            case 'ecosystem': return <Level3Ecosystem />;
-            case 'pickpeak': return <Level4PickPeak />;
-            case 'negotiation': return <Level5Negotiation />;
-            case 'certificate': return <Certificate />;
+            case 'chapter1-migration': return <Chapter1Migration />;
+            case 'chapter2-moat': return <Chapter2Moat />;
+            case 'chapter3-groundforce': return <Chapter3GroundForce />;
+            case 'chapter4-pickpeak': return <Chapter4PickPeak />;
+            case 'chapter5-ecosystem': return <Chapter5Ecosystem />;
+            case 'chapter6-negotiation': return <Chapter6Negotiation />;
+            case 'epilogue': return <Epilogue />;
             default: return <Prologue />;
         }
     };
 
-    // ...
-
-    // ...
+    const currentChapterInfo = CHAPTER_INFO[currentChapterId];
 
     return (
         <div className="min-h-screen w-full bg-slate-950 text-white font-sans selection:bg-cyan-500/30 overflow-hidden">
@@ -153,22 +176,22 @@ export default function GameEngine() {
 
             {/* Briefing Overlay */}
             <AnimatePresence>
-                {showBriefing && view === 'level' && (
+                {showBriefing && view === 'chapter' && (
                     <div className="fixed inset-0 z-50">
                         <LevelBriefing
-                            levelId={currentLevelId}
+                            levelId={currentChapterId}
                             onComplete={() => setShowBriefing(false)}
                         />
                     </div>
                 )}
             </AnimatePresence>
 
-            {/* Level Complete Overlay */}
+            {/* Chapter Complete Overlay */}
             <AnimatePresence>
-                {showLevelComplete && (
+                {showChapterComplete && (
                     <LevelCompleteOverlay
-                        levelId={currentLevelId}
-                        onComplete={handleLevelCompleteClose}
+                        levelId={currentChapterId}
+                        onComplete={handleChapterCompleteClose}
                     />
                 )}
             </AnimatePresence>
@@ -180,8 +203,8 @@ export default function GameEngine() {
                 )}
             </AnimatePresence>
 
-            {/* HUD (Only in Level View, not Prologue) */}
-            {view === 'level' && currentLevelId !== 'prologue' && (
+            {/* HUD (Only in Chapter View, not Prologue) */}
+            {view === 'chapter' && currentChapterId !== 'prologue' && (
                 <motion.header
                     initial={{ y: -100 }}
                     animate={{ y: 0 }}
@@ -199,16 +222,13 @@ export default function GameEngine() {
                                     <span>{Math.round((hp / maxHp) * 100)}%</span>
                                 </div>
                                 <div className="w-48 h-3 bg-slate-950/80 rounded-sm border border-slate-700/50 overflow-hidden relative">
-                                    {/* Grid pattern on empty bar */}
                                     <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_2px,#000_2px)] bg-[size:4px_100%] opacity-30" />
-
                                     <motion.div
                                         className={`h-full relative ${hp < 30 ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]'}`}
                                         initial={{ width: 0 }}
                                         animate={{ width: `${(hp / maxHp) * 100}%` }}
                                         transition={{ type: "spring", stiffness: 100, damping: 20 }}
                                     >
-                                        {/* Scanline effect */}
                                         <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" />
                                     </motion.div>
                                 </div>
@@ -220,26 +240,60 @@ export default function GameEngine() {
                                     <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-cyan-500/30 overflow-hidden ring-2 ring-transparent group-hover:ring-cyan-400/50 transition-all">
                                         <Character type="player" avatar={avatar} className="w-full h-full transform scale-110 translate-y-1" />
                                     </div>
-                                    {/* Online Status Dot */}
                                     <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900 shadow-[0_0_5px_#22c55e]" />
                                 </div>
                                 <div>
                                     <div className="text-[10px] text-slate-400 font-mono tracking-wider">OPERATOR</div>
                                     <div className="text-sm font-bold text-white font-outfit tracking-wide">{employeeId || 'GUEST'}</div>
                                 </div>
+
+                                {/* Bit AI Companion */}
+                                {hasBit && (
+                                    <motion.div
+                                        initial={{ scale: 0, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        className="flex items-center gap-2 pl-3 border-l border-white/10"
+                                    >
+                                        <div className="relative">
+                                            <motion.div
+                                                animate={{ y: [0, -2, 0] }}
+                                                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                                className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 border border-cyan-300/50 overflow-hidden shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+                                            >
+                                                <Character type="bit" className="w-full h-full" />
+                                            </motion.div>
+                                            <motion.div
+                                                animate={{ scale: [1, 1.2, 1] }}
+                                                transition={{ duration: 1.5, repeat: Infinity }}
+                                                className="absolute -top-1 -right-1 w-2 h-2 bg-cyan-400 rounded-full shadow-[0_0_5px_#22d3ee]"
+                                            />
+                                        </div>
+                                        <div className="hidden sm:block">
+                                            <div className="text-[10px] text-cyan-400 font-mono tracking-wider">AI ASSIST</div>
+                                            <div className="text-xs font-bold text-cyan-300">Bit</div>
+                                        </div>
+                                    </motion.div>
+                                )}
                             </div>
                         </div>
 
                         {/* Center - Mission Status */}
                         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:block">
                             <div className="px-4 py-1 rounded-full bg-slate-950/50 border border-cyan-500/20 text-cyan-400 text-xs font-mono tracking-[0.2em] shadow-[0_0_15px_rgba(6,182,212,0.1)]">
-                                {currentLevelId === 'hub' ? 'SYSTEM IDLE' : `MISSION: ${currentLevelId.toUpperCase()}`}
+                                {currentChapterInfo?.subtitle || 'MISSION'}
                             </div>
                         </div>
 
                         <div className="flex items-center gap-4">
+                            {/* Insights Progress */}
+                            <div className="hidden lg:flex items-center gap-3 text-[10px] font-mono">
+                                <InsightMeter label="MARKET" value={marketInsights} color="cyan" />
+                                <InsightMeter label="COMPANY" value={companyInsights} color="purple" />
+                                <InsightMeter label="PRODUCT" value={productInsights} color="green" />
+                            </div>
+
                             {/* XP Counter */}
-                            <div className="text-right mr-4">
+                            <div className="text-right mr-4 pl-4 border-l border-white/10">
                                 <div className="text-[10px] text-slate-400 font-mono tracking-wider">EXPERIENCE</div>
                                 <div className="text-lg font-bold text-cyan-400 font-mono leading-none shadow-cyan-500/20 drop-shadow-sm">
                                     {xp.toLocaleString()} <span className="text-xs text-cyan-600">XP</span>
@@ -265,7 +319,7 @@ export default function GameEngine() {
             <main className="relative z-10 min-h-screen flex flex-col pt-24 pb-12 px-4">
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={view === 'hub' ? 'hub' : currentLevelId}
+                        key={view === 'hub' ? 'hub' : currentChapterId}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
@@ -275,6 +329,27 @@ export default function GameEngine() {
                     </motion.div>
                 </AnimatePresence>
             </main>
+        </div>
+    );
+}
+
+// Insight Meter Component
+function InsightMeter({ label, value, color }: { label: string; value: number; color: 'cyan' | 'purple' | 'green' }) {
+    const colorClasses = {
+        cyan: 'bg-cyan-500 shadow-cyan-500/50',
+        purple: 'bg-purple-500 shadow-purple-500/50',
+        green: 'bg-green-500 shadow-green-500/50',
+    };
+
+    return (
+        <div className="flex flex-col gap-1">
+            <span className="text-slate-500">{label}</span>
+            <div className="w-16 h-1 bg-slate-800 rounded-full overflow-hidden">
+                <div
+                    className={`h-full ${colorClasses[color]} shadow-sm transition-all duration-500`}
+                    style={{ width: `${value}%` }}
+                />
+            </div>
         </div>
     );
 }
