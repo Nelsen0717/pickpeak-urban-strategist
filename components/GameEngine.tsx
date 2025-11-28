@@ -50,7 +50,7 @@ export default function GameEngine() {
     const [showGameOver, setShowGameOver] = useState(false);
     const prevCompletedChaptersRef = useRef(completedChapters.length);
 
-    const totalChapters = 7; // 6 chapters + epilogue
+    const totalChapters = 8; // prologue + 6 chapters + epilogue
     const progress = Math.min(100, (completedChapters.length / totalChapters) * 100);
 
     useEffect(() => {
@@ -89,8 +89,8 @@ export default function GameEngine() {
     const handleChapterCompleteClose = () => {
         setShowChapterComplete(false);
 
-        // Check for Game Clear (All chapters done including epilogue)
-        if (completedChapters.length >= totalChapters) {
+        // Check for Game Clear (Only after completing epilogue)
+        if (completedChapters.includes('epilogue')) {
             setShowGameClear(true);
         } else {
             setView('hub');

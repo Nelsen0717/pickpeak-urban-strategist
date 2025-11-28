@@ -56,9 +56,9 @@ export default function Epilogue() {
     const unlockedTeam = teamMembers.filter(m => m.unlocked).length;
     const knowledgeCount = knowledge.length;
 
-    // Determine player's performance grade
+    // Determine player's performance grade (unified with Certificate and GameClearSequence)
     const getGrade = () => {
-        if (totalInsights >= 90 && badges.length >= 6) return { grade: 'S', title: '傳奇戰略家', color: 'text-yellow-400' };
+        if (totalInsights >= 90 && badges.length >= 6) return { grade: 'S', title: '傳奇策略長', color: 'text-yellow-400' };
         if (totalInsights >= 75 && badges.length >= 5) return { grade: 'A', title: '資深特務', color: 'text-cyan-400' };
         if (totalInsights >= 60 && badges.length >= 4) return { grade: 'B', title: '專業顧問', color: 'text-green-400' };
         if (totalInsights >= 40) return { grade: 'C', title: '見習探員', color: 'text-blue-400' };

@@ -1,34 +1,64 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useGameStore } from '@/lib/store';
-// motion removed - not currently used but kept for future animations
 import html2canvas from 'html2canvas';
-import { Download, Award, Shield, Star } from 'lucide-react';
+import { Download, Award, Shield, Star, ArrowLeft, Sparkles } from 'lucide-react';
 import Character from './rpg/Character';
 
+// Badge configuration with Chinese names and icons
+const BADGE_CONFIG: Record<string, { chinese: string; icon: string; description: string }> = {
+    'First Steps': { chinese: '初入宇宙', icon: '🚀', description: '完成入職序章' },
+    'Market Navigator': { chinese: '市場領航員', icon: '🧭', description: '掌握大遷徙趨勢' },
+    'Data Hunter': { chinese: '數據獵人', icon: '📊', description: '解鎖數據護城河' },
+    'Team Builder': { chinese: '團隊建築師', icon: '👥', description: '認識地面部隊' },
+    'PickPeak Master': { chinese: 'PickPeak 大師', icon: '🎯', description: '精通產品操作' },
+    'Ecosystem Architect': { chinese: '生態系建築師', icon: '🌐', description: '建立合作網絡' },
+    'Deal Closer': { chinese: '交易終結者', icon: '🤝', description: '完成終極談判' },
+    'FUNRAISE Certified': { chinese: '方睿認證', icon: '⭐', description: '正式成為艦隊成員' },
+};
+
 export default function Certificate() {
-    const { avatar, badges, xp, completedChapters, level, marketInsights, companyInsights, productInsights } = useGameStore();
+    const { avatar, badges, xp, completedChapters, employeeId, marketInsights, companyInsights, productInsights, setView } = useGameStore();
     const certificateRef = useRef<HTMLDivElement>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [licenseNumber, setLicenseNumber] = useState('');
+
+    // Generate stable license number on mount
+    useEffect(() => {
+        setLicenseNumber(`FR-${Math.random().toString(36).substr(2, 9).toUpperCase()}`);
+    }, []);
 
     const handleDownload = async () => {
         if (!certificateRef.current) return;
         setIsGenerating(true);
 
         try {
+            // Wait a bit for fonts to load
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             const canvas = await html2canvas(certificateRef.current, {
-                scale: 2, // High resolution
-                backgroundColor: '#0f172a', // Match slate-900
+                scale: 2,
+                backgroundColor: '#0f172a',
                 logging: false,
-                useCORS: true // For external images if any
+                useCORS: true,
+                allowTaint: true,
+                onclone: (clonedDoc) => {
+                    // Ensure signature font is applied in cloned document
+                    const signatureEl = clonedDoc.querySelector('.signature-text');
+                    if (signatureEl) {
+                        (signatureEl as HTMLElement).style.fontFamily = '"Great Vibes", cursive';
+                    }
+                }
             });
 
-            const image = canvas.toDataURL('image/png');
+            const image = canvas.toDataURL('image/png', 1.0);
             const link = document.createElement('a');
             link.href = image;
-            link.download = 'Funraise_Galactic_License.png';
+            link.download = `FUNRAISE_Certificate_${employeeId || 'Agent'}.png`;
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
         } catch (err) {
             console.error('Failed to generate certificate:', err);
             alert('證書生成失敗，請稍後再試。');
@@ -38,136 +68,194 @@ export default function Certificate() {
     };
 
     const totalInsights = Math.round((marketInsights + companyInsights + productInsights) / 3);
-    const rank = totalInsights >= 90 ? '傳奇策略長'
-        : totalInsights >= 70 ? '資深特務'
-        : totalInsights >= 50 ? '專業顧問'
-        : totalInsights >= 30 ? '見習探員'
+    // Unified grade calculation (same as GameClearSequence and Epilogue)
+    const rank = (totalInsights >= 90 && badges.length >= 6) ? '傳奇策略長'
+        : (totalInsights >= 75 && badges.length >= 5) ? '資深特務'
+        : (totalInsights >= 60 && badges.length >= 4) ? '專業顧問'
+        : totalInsights >= 40 ? '見習探員'
         : '新進成員';
-    const rankEn = totalInsights >= 90 ? 'LEGENDARY STRATEGIST'
-        : totalInsights >= 70 ? 'SENIOR AGENT'
-        : totalInsights >= 50 ? 'PROFESSIONAL'
-        : totalInsights >= 30 ? 'JUNIOR SCOUT'
+    const rankEn = (totalInsights >= 90 && badges.length >= 6) ? 'LEGENDARY STRATEGIST'
+        : (totalInsights >= 75 && badges.length >= 5) ? 'SENIOR AGENT'
+        : (totalInsights >= 60 && badges.length >= 4) ? 'PROFESSIONAL'
+        : totalInsights >= 40 ? 'JUNIOR SCOUT'
         : 'RECRUIT';
-    const date = new Date().toLocaleDateString('zh-TW');
+    const date = new Date().toLocaleDateString('zh-TW', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
 
     return (
-        <div className="flex flex-col items-center gap-8 p-4 w-full max-w-4xl mx-auto">
+        <div className="flex flex-col items-center gap-6 p-4 w-full max-w-5xl mx-auto">
+            {/* Header */}
             <div className="text-center space-y-2">
-                <h2 className="text-3xl font-bold text-white">恭喜你！🎉</h2>
-                <p className="text-slate-400">您已完成方睿宇宙的全部冒險，這是您的銀河執照。</p>
+                <div className="flex items-center justify-center gap-2 text-cyan-400 text-sm font-mono tracking-widest mb-2">
+                    <Sparkles className="w-4 h-4" />
+                    CERTIFICATION COMPLETE
+                    <Sparkles className="w-4 h-4" />
+                </div>
+                <h2 className="text-3xl font-bold text-white">恭喜你，{employeeId || '特務'}！</h2>
+                <p className="text-slate-400">您已完成方睿宇宙的全部訓練，這是您的銀河執照。</p>
             </div>
 
-            {/* Certificate Card - This part will be captured */}
+            {/* Certificate Card */}
             <div
                 ref={certificateRef}
-                className="relative w-full aspect-[1.58/1] bg-slate-900 rounded-xl overflow-hidden border-4 border-cyan-500/50 shadow-2xl shadow-cyan-500/20 p-8 flex flex-col justify-between"
-                style={{ minHeight: '500px' }}
+                className="relative w-full bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 rounded-2xl overflow-hidden border border-cyan-500/30 shadow-2xl shadow-cyan-500/10 p-8"
+                style={{ aspectRatio: '1.6/1', minHeight: '480px' }}
             >
-                {/* Background Elements */}
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950/50 to-slate-900 pointer-events-none" />
-                <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/20 blur-[100px] rounded-full pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 blur-[100px] rounded-full pointer-events-none" />
+                {/* Decorative Elements */}
+                <div className="absolute inset-0 pointer-events-none">
+                    {/* Corner decorations */}
+                    <div className="absolute top-0 left-0 w-24 h-24 border-t-2 border-l-2 border-cyan-500/30 rounded-tl-2xl" />
+                    <div className="absolute top-0 right-0 w-24 h-24 border-t-2 border-r-2 border-cyan-500/30 rounded-tr-2xl" />
+                    <div className="absolute bottom-0 left-0 w-24 h-24 border-b-2 border-l-2 border-cyan-500/30 rounded-bl-2xl" />
+                    <div className="absolute bottom-0 right-0 w-24 h-24 border-b-2 border-r-2 border-cyan-500/30 rounded-br-2xl" />
 
-                {/* Header */}
-                <div className="flex justify-between items-start relative z-10">
+                    {/* Glow effects */}
+                    <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 blur-[120px] rounded-full" />
+                    <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-500/10 blur-[120px] rounded-full" />
+
+                    {/* Grid pattern */}
+                    <div className="absolute inset-0 opacity-5 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:20px_20px]" />
+                </div>
+
+                {/* Header Row */}
+                <div className="relative z-10 flex justify-between items-start mb-6">
+                    {/* Logo and Title */}
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg overflow-hidden p-2">
-                            <img src="/funraise-logo-dark.png" alt="FUNRAISE" className="w-full h-full object-contain" />
+                        <div className="w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center border border-slate-700 shadow-lg overflow-hidden">
+                            <img
+                                src="/funraise-logo-dark.png"
+                                alt="FUNRAISE"
+                                className="w-10 h-10 object-contain"
+                            />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-white tracking-wide">方睿銀河執照</h1>
-                            <p className="text-cyan-400 text-sm tracking-wide">FUNRAISE CRE 戰略指揮部</p>
+                            <h1 className="text-xl font-bold text-white tracking-wide">方睿銀河執照</h1>
+                            <p className="text-cyan-400/80 text-xs tracking-widest font-mono">GALACTIC LICENSE</p>
                         </div>
                     </div>
+
+                    {/* License Number */}
                     <div className="text-right">
-                        <div className="text-xs text-slate-500">執照編號</div>
-                        <div className="text-lg text-white font-mono">FR-{Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+                        <div className="text-[10px] text-slate-500 tracking-wider">LICENSE NO.</div>
+                        <div className="text-sm text-white/80 font-mono">{licenseNumber}</div>
                     </div>
                 </div>
 
-                {/* Content */}
-                <div className="flex gap-8 relative z-10 mt-8 flex-1">
-                    {/* Avatar Section */}
+                {/* Main Content */}
+                <div className="relative z-10 flex gap-6">
+                    {/* Left: Avatar & Title */}
                     <div className="w-1/3 flex flex-col gap-4">
-                        <div className="aspect-square rounded-xl bg-slate-800 border-2 border-slate-600 overflow-hidden relative shadow-inner">
+                        {/* Avatar */}
+                        <div className="aspect-square rounded-xl bg-slate-800/80 border border-slate-700 overflow-hidden relative shadow-inner">
                             <Character type="player" avatar={avatar} className="w-full h-full transform scale-125 translate-y-4" />
-                            <div className="absolute bottom-0 left-0 right-0 bg-slate-900/80 backdrop-blur py-1 text-center text-xs text-white font-bold">
-                                官方肖像
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 to-transparent py-2 text-center">
+                                <div className="text-xs text-slate-400">AGENT</div>
+                                <div className="text-sm font-bold text-white">{employeeId || 'GUEST'}</div>
                             </div>
                         </div>
-                        <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
-                            <div className="text-xs text-slate-400 mb-1">頭銜</div>
-                            <div className="text-lg font-bold text-yellow-400">{rank}</div>
-                            <div className="text-xs text-slate-500 font-mono">{rankEn}</div>
+
+                        {/* Title/Rank */}
+                        <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 rounded-xl p-3 border border-amber-500/20">
+                            <div className="text-[10px] text-amber-400/60 tracking-wider mb-1">RANK ACHIEVED</div>
+                            <div className="text-lg font-bold text-amber-400">{rank}</div>
+                            <div className="text-[10px] text-amber-500/60 font-mono tracking-wider">{rankEn}</div>
                         </div>
                     </div>
 
-                    {/* Stats Section */}
-                    <div className="flex-1 flex flex-col gap-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-                                <div className="flex items-center gap-2 text-slate-400 text-sm mb-1">
-                                    <Star className="w-4 h-4 text-yellow-500" /> 總經驗值
+                    {/* Right: Stats & Badges */}
+                    <div className="flex-1 flex flex-col gap-4">
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                                <div className="flex items-center gap-1.5 text-slate-400 text-[10px] mb-1">
+                                    <Star className="w-3 h-3 text-yellow-500" /> TOTAL XP
                                 </div>
-                                <div className="text-2xl font-bold text-white">{xp.toLocaleString()}</div>
+                                <div className="text-xl font-bold text-white">{xp.toLocaleString()}</div>
                             </div>
-                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
-                                <div className="flex items-center gap-2 text-slate-400 text-sm mb-1">
-                                    <Shield className="w-4 h-4 text-green-500" /> 完成章節
+                            <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                                <div className="flex items-center gap-1.5 text-slate-400 text-[10px] mb-1">
+                                    <Shield className="w-3 h-3 text-green-500" /> CHAPTERS
                                 </div>
-                                <div className="text-2xl font-bold text-white">{completedChapters.length} / 8</div>
+                                <div className="text-xl font-bold text-white">{completedChapters.length}/8</div>
+                            </div>
+                            <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                                <div className="flex items-center gap-1.5 text-slate-400 text-[10px] mb-1">
+                                    <Award className="w-3 h-3 text-purple-500" /> BADGES
+                                </div>
+                                <div className="text-xl font-bold text-white">{badges.length}/8</div>
                             </div>
                         </div>
 
-                        <div>
-                            <div className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                                <Award className="w-4 h-4" /> 獲得徽章
-                            </div>
+                        {/* Badges Section */}
+                        <div className="flex-1">
+                            <div className="text-[10px] text-slate-500 tracking-wider mb-2">EARNED BADGES</div>
                             <div className="flex flex-wrap gap-2">
-                                {badges.length > 0 ? badges.map((badge) => (
-                                    <div key={badge} className="px-3 py-1 bg-cyan-900/30 border border-cyan-500/30 rounded-full text-xs text-cyan-300">
-                                        {badge}
-                                    </div>
-                                )) : (
+                                {badges.length > 0 ? badges.map((badge) => {
+                                    const config = BADGE_CONFIG[badge] || { chinese: badge, icon: '🏅', description: '' };
+                                    return (
+                                        <div
+                                            key={badge}
+                                            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-lg"
+                                        >
+                                            <span className="text-sm">{config.icon}</span>
+                                            <span className="text-xs text-cyan-300 font-medium">{config.chinese}</span>
+                                        </div>
+                                    );
+                                }) : (
                                     <div className="text-slate-600 text-sm italic">尚未獲得徽章</div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="mt-auto border-t border-slate-700 pt-4 flex justify-between items-end">
+                        {/* Footer: Date & Signature */}
+                        <div className="flex justify-between items-end pt-4 border-t border-slate-700/50 mt-auto">
                             <div>
-                                <div className="text-xs text-slate-500">發證日期</div>
-                                <div className="text-white font-mono">{date}</div>
+                                <div className="text-[10px] text-slate-500 tracking-wider">ISSUED ON</div>
+                                <div className="text-white text-sm">{date}</div>
                             </div>
                             <div className="text-right">
-                                <div className="h-10 w-28 flex items-center justify-center text-cyan-400 text-sm font-bold italic">Mike Wu</div>
-                                <div className="text-xs text-slate-500">艦長簽名</div>
+                                <div className="signature-text font-signature text-3xl text-cyan-400 leading-none mb-1" style={{ fontFamily: 'var(--font-signature), cursive' }}>
+                                    Mike Wu
+                                </div>
+                                <div className="text-[10px] text-slate-500 tracking-wider">CAPTAIN • FUNRAISE</div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Bottom watermark */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-slate-600 tracking-widest">
+                    FUNRAISE © 2025 • CRE STRATEGIC COMMAND
+                </div>
             </div>
 
-            {/* Actions */}
+            {/* Action Buttons */}
             <div className="flex gap-4">
                 <button
                     onClick={handleDownload}
                     disabled={isGenerating}
-                    className="flex items-center gap-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-cyan-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="group flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isGenerating ? (
-                        <>生成中...</>
+                        <>
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            生成中...
+                        </>
                     ) : (
                         <>
-                            <Download className="w-5 h-5" />
+                            <Download className="w-5 h-5 group-hover:scale-110 transition-transform" />
                             下載證書
                         </>
                     )}
                 </button>
                 <button
-                    onClick={() => useGameStore.getState().setView('hub')}
-                    className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-all"
+                    onClick={() => setView('hub')}
+                    className="flex items-center gap-2 px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 rounded-xl font-bold transition-all"
                 >
+                    <ArrowLeft className="w-5 h-5" />
                     返回基地
                 </button>
             </div>

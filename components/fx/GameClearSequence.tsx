@@ -13,7 +13,17 @@ interface GameClearSequenceProps {
 export default function GameClearSequence({ onClose }: GameClearSequenceProps) {
     const [step, setStep] = useState(0);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const { setView } = useGameStore();
+    const { setView, xp, badges, marketInsights, companyInsights, productInsights, completedChapters } = useGameStore();
+
+    // Calculate actual grade/title
+    const totalInsights = Math.round((marketInsights + companyInsights + productInsights) / 3);
+    const getGradeTitle = () => {
+        if (totalInsights >= 90 && badges.length >= 6) return '傳奇策略長';
+        if (totalInsights >= 75 && badges.length >= 5) return '資深特務';
+        if (totalInsights >= 60 && badges.length >= 4) return '專業顧問';
+        if (totalInsights >= 40) return '見習探員';
+        return '新進成員';
+    };
 
     // Canvas animation for aurora effect
     useEffect(() => {
@@ -307,9 +317,9 @@ export default function GameClearSequence({ onClose }: GameClearSequenceProps) {
                             className="grid grid-cols-3 gap-4 md:gap-6 max-w-3xl mx-auto mt-8"
                         >
                             {[
-                                { label: '總經驗值', value: 'MAX', color: 'text-cyan-400', icon: Sparkles },
-                                { label: '獲得徽章', value: '5/5', color: 'text-yellow-400', icon: Award },
-                                { label: '頭銜', value: '宇宙策略長', color: 'text-purple-400', icon: Trophy },
+                                { label: '總經驗值', value: xp.toLocaleString(), color: 'text-cyan-400', icon: Sparkles },
+                                { label: '獲得徽章', value: `${badges.length}/8`, color: 'text-yellow-400', icon: Award },
+                                { label: '頭銜', value: getGradeTitle(), color: 'text-purple-400', icon: Trophy },
                             ].map((stat, i) => (
                                 <motion.div
                                     key={stat.label}
@@ -369,7 +379,7 @@ export default function GameClearSequence({ onClose }: GameClearSequenceProps) {
                 className="absolute top-6 left-6 text-yellow-500/50 font-mono text-xs space-y-1"
             >
                 <div>CAMPAIGN: COMPLETED</div>
-                <div>RANK: LEGENDARY</div>
+                <div>RANK: {getGradeTitle().toUpperCase()}</div>
                 <div>STATUS: ELITE_OPERATOR</div>
             </motion.div>
 
@@ -379,8 +389,8 @@ export default function GameClearSequence({ onClose }: GameClearSequenceProps) {
                 transition={{ delay: 1 }}
                 className="absolute bottom-6 right-6 text-yellow-500/50 font-mono text-xs text-right space-y-1"
             >
-                <div>MISSIONS: 5/5</div>
-                <div>BADGES: ALL_UNLOCKED</div>
+                <div>CHAPTERS: {completedChapters.length}/8</div>
+                <div>BADGES: {badges.length}/8</div>
                 <div>CERTIFICATE: AVAILABLE</div>
             </motion.div>
         </motion.div>

@@ -152,6 +152,39 @@ export default function Hub() {
                                 onSelect={handleMissionSelect}
                             />
                         </div>
+
+                        {/* Certificate Access - Show after completing epilogue */}
+                        {completedChapters.includes('epilogue') && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-6 p-6 bg-gradient-to-r from-amber-900/30 via-yellow-900/20 to-amber-900/30 rounded-xl border-2 border-yellow-500/50 relative overflow-hidden"
+                            >
+                                {/* Decorative stars */}
+                                <div className="absolute top-2 right-2 text-yellow-500 animate-pulse">✦</div>
+                                <div className="absolute bottom-2 left-4 text-yellow-500/50 animate-pulse delay-150">✦</div>
+                                <div className="absolute top-4 left-8 text-yellow-500/30 animate-pulse delay-300">✦</div>
+
+                                <div className="flex items-center justify-between relative z-10">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-yellow-500/30">
+                                            <Award className="w-7 h-7 text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-yellow-400">🎉 恭喜完成訓練！</h3>
+                                            <p className="text-amber-300/80 text-sm">你的銀河執照已準備就緒</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setView('certificate')}
+                                        className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-900 font-bold rounded-xl shadow-lg shadow-yellow-500/30 transition-all flex items-center gap-2 hover:scale-105"
+                                    >
+                                        <Crown className="w-5 h-5" />
+                                        領取銀河執照
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
                     </div>
                 )}
 
@@ -179,27 +212,27 @@ export default function Hub() {
                         </div>
 
                         {/* Graduation Certificate Button */}
-                        {completedChapters.length >= 7 && (
+                        {completedChapters.includes('epilogue') && (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="p-6 bg-gradient-to-r from-cyan-900/50 to-blue-900/50 rounded-xl border border-cyan-500/50 flex items-center justify-between"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-cyan-500 rounded-full flex items-center justify-center shadow-lg shadow-cyan-500/50">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-cyan-500/50">
                                         <Crown className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-bold text-white">所有訓練已完成</h3>
-                                        <p className="text-cyan-300 text-sm">您已具備方睿科技正式成員資格</p>
+                                        <h3 className="text-xl font-bold text-white">訓練完成！</h3>
+                                        <p className="text-cyan-300 text-sm">您已正式成為方睿艦隊成員</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setView('certificate')}
-                                    className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-lg shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-2"
+                                    className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/25 transition-all flex items-center gap-2 hover:scale-105"
                                 >
                                     <Award className="w-5 h-5" />
-                                    領取結業證書
+                                    查看銀河執照
                                 </button>
                             </motion.div>
                         )}
