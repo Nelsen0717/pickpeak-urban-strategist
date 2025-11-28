@@ -295,7 +295,7 @@ export default function Epilogue() {
                                 className="text-center"
                             >
                                 <p className="text-xl text-cyan-400">
-                                    完成 {completedChapters.length} / 7 個章節
+                                    完成 {completedChapters.length} / 8 個章節
                                 </p>
                             </motion.div>
 

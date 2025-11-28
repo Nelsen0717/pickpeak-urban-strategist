@@ -34,8 +34,12 @@ export default function Certificate() {
         setIsGenerating(true);
 
         try {
-            // Wait a bit for fonts to load
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Wait for fonts to load
+            if (document.fonts) {
+                await document.fonts.ready;
+            }
+            // Additional delay for rendering
+            await new Promise(resolve => setTimeout(resolve, 500));
 
             const canvas = await html2canvas(certificateRef.current, {
                 scale: 2,
@@ -43,11 +47,18 @@ export default function Certificate() {
                 logging: false,
                 useCORS: true,
                 allowTaint: true,
+                imageTimeout: 15000,
                 onclone: (clonedDoc) => {
                     // Ensure signature font is applied in cloned document
                     const signatureEl = clonedDoc.querySelector('.signature-text');
                     if (signatureEl) {
                         (signatureEl as HTMLElement).style.fontFamily = '"Great Vibes", cursive';
+                        (signatureEl as HTMLElement).style.fontSize = '2rem';
+                    }
+                    // Force styles to be applied
+                    const certificateEl = clonedDoc.querySelector('[data-certificate]');
+                    if (certificateEl) {
+                        (certificateEl as HTMLElement).style.transform = 'none';
                     }
                 }
             });
@@ -61,7 +72,24 @@ export default function Certificate() {
             document.body.removeChild(link);
         } catch (err) {
             console.error('Failed to generate certificate:', err);
-            alert('證書生成失敗，請稍後再試。');
+            // Fallback: try without font waiting
+            try {
+                const canvas = await html2canvas(certificateRef.current!, {
+                    scale: 2,
+                    backgroundColor: '#0f172a',
+                    logging: false,
+                });
+                const image = canvas.toDataURL('image/png', 1.0);
+                const link = document.createElement('a');
+                link.href = image;
+                link.download = `FUNRAISE_Certificate_${employeeId || 'Agent'}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (fallbackErr) {
+                console.error('Fallback also failed:', fallbackErr);
+                alert('證書生成失敗，請稍後再試。');
+            }
         } finally {
             setIsGenerating(false);
         }
@@ -101,6 +129,7 @@ export default function Certificate() {
             {/* Certificate Card */}
             <div
                 ref={certificateRef}
+                data-certificate="true"
                 className="relative w-full bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 rounded-2xl overflow-hidden border border-cyan-500/30 shadow-2xl shadow-cyan-500/10 p-8"
                 style={{ aspectRatio: '1.6/1', minHeight: '480px' }}
             >

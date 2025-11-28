@@ -8,8 +8,9 @@ import Character from './Character';
 import AvatarEditor from './AvatarEditor';
 import clsx from 'clsx';
 
-// Chapter order for progression
+// Chapter order for progression (8 chapters total)
 const CHAPTER_ORDER: ChapterId[] = [
+    'prologue',
     'chapter1-migration',
     'chapter2-moat',
     'chapter3-groundforce',
@@ -38,8 +39,9 @@ export default function Hub() {
 
     // Check if chapter is unlocked
     const isChapterUnlocked = (chapterId: ChapterId): boolean => {
+        if (chapterId === 'prologue') return true; // Prologue is always unlocked
         const index = CHAPTER_ORDER.indexOf(chapterId);
-        if (index === 0) return completedChapters.includes('prologue');
+        if (index <= 0) return false;
         return completedChapters.includes(CHAPTER_ORDER[index - 1]);
     };
 
@@ -83,6 +85,19 @@ export default function Hub() {
                                 <Map className="text-cyan-400" /> 章節選擇
                             </h2>
                             <GuidanceBubble />
+                        </div>
+
+                        {/* PROLOGUE: 序章 */}
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-mono text-emerald-400 tracking-wider">PROLOGUE // 序章 - WELCOME</h3>
+                            <div className="grid grid-cols-1 gap-3">
+                                <ChapterCard
+                                    chapterId="prologue"
+                                    isUnlocked={isChapterUnlocked('prologue')}
+                                    isCompleted={completedChapters.includes('prologue')}
+                                    onSelect={handleMissionSelect}
+                                />
+                            </div>
                         </div>
 
                         {/* ACT 1: 覺醒 */}

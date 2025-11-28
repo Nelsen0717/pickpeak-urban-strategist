@@ -8,7 +8,7 @@
 
 ## 📊 當前遊戲狀態 (2025-11-28)
 
-### 整體評分 (Session #3 後更新)
+### 整體評分 (Session #4 後更新)
 | 維度 | 評分 | 備註 |
 |------|------|------|
 | 遊戲性 | 5/5 | 所有章節都有互動元素 |
@@ -20,7 +20,7 @@
 ### 章節完成度
 | 章節 | 互動性 | 教育內容 | 完成度 | 備註 |
 |------|--------|----------|--------|------|
-| 入職序章 (Hub Intro) | ⭐⭐ | ⭐⭐⭐ | 90% | 基礎對話系統 |
+| Prologue: 序章 | ⭐⭐⭐ | ⭐⭐⭐⭐ | 100% | 任務中心可見 ⬆️ Session #4 |
 | Chapter 1: 大遷徙 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 100% | 選擇式互動，趨勢分析 |
 | Chapter 2: 數據護城河 | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 100% | 點擊解鎖數據層互動 |
 | Chapter 3: 地面部隊 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 100% | **新增團隊配對挑戰** |
@@ -51,6 +51,9 @@
 - [x] **中文徽章名稱系統** ⭐ NEW (Session #3)
 - [x] **GameClear 動態數據** ⭐ NEW (Session #3)
 - [x] **Hub 銀河執照入口** ⭐ NEW (Session #3)
+- [x] **任務中心序章卡片** ⭐ NEW (Session #4)
+- [x] **統一章節計數 8/8** ⭐ NEW (Session #4)
+- [x] **證書下載穩定性提升** ⭐ NEW (Session #4)
 
 ### 待修復問題
 - [x] ~~章節完成後缺少「下一章」引導~~ ✅ 已解決
@@ -84,6 +87,51 @@
 ---
 
 ## 📝 測試歷史
+
+### Session 2025-11-28 #4
+**測試人**: Claude (AI Assistant)
+**測試範圍**: 整體一致性修復 + 序章可見性
+**觸發**: 部署後玩家反饋
+
+**發現問題**:
+1. Epilogue 顯示「完成 X/7 章節」應該是「X/8」
+2. Hub 任務中心沒有顯示 Prologue 序章（總章節數不一致）
+3. 證書下載功能不穩定
+
+**完成修復**:
+
+1. **Epilogue 章節計數修復** ⭐
+   - 修正顯示從 `/7` 改為 `/8`
+   - 文件: `components/chapters/Epilogue.tsx:298`
+
+2. **Hub 任務中心新增 Prologue** ⭐⭐
+   - `CHAPTER_ORDER` 新增 `'prologue'`（現在完整 8 章）
+   - `isChapterUnlocked()` 修正 prologue 永遠解鎖
+   - 新增 PROLOGUE 區塊（綠色 emerald 主題）
+   - 文件: `components/rpg/Hub.tsx:11-21, 40-46, 90-101`
+
+3. **Certificate 下載穩定性提升** ⭐
+   - 新增 `document.fonts.ready` 字體載入等待
+   - 增加延遲到 500ms 確保渲染完成
+   - 新增 fallback 機制（主流程失敗時備用）
+   - 新增 `imageTimeout: 15000` 配置
+   - 文件: `components/Certificate.tsx:32-96`
+
+**章節順序確認** (8 章完整):
+```
+1. Prologue (序章) - 永遠解鎖
+2. Chapter 1: 大遷徙
+3. Chapter 2: 數據護城河
+4. Chapter 3: 地面部隊
+5. Chapter 4: PickPeak
+6. Chapter 5: 生態系統
+7. Chapter 6: 談判實戰
+8. Epilogue (終章)
+```
+
+**Build 狀態**: ✅ 編譯成功
+
+---
 
 ### Session 2025-11-28 #3
 **測試人**: Claude (AI Assistant)
